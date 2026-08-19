@@ -1,3 +1,11 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changesets/0001-starter-baseline.yaml
+  - include:
+      file: db/changelog/changesets/0002-add-location-table.yaml
+  - include:
+      file: db/changelog/changesets/0003-add-column-description-to-locations.yaml
+  - include:
+      file: db/changelog/changesets/0004-add-table-users.yaml
+  - include:
+      file: db/changelog/changesets/0005-add-column-user_role-to-users.yaml

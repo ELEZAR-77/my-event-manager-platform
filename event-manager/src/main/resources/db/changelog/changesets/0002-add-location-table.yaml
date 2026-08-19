@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0002-add-location-table
+      author: OMAR
+      changes:
+        - createTable:
+            tableName: locations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: capacity
+                  type: INTEGER
+                  constraints:
+                    nullable: false
