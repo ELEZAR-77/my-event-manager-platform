@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/changesets/0004-add-table-users.yaml
   - include:
       file: db/changelog/changesets/0005-add-column-user_role-to-users.yaml
+  - include:
+      file: db/changelog/changesets/0006-add-table-events.yaml
+  - include:
+      file: db/changelog/changesets/0007-add-table-registrations.yaml
