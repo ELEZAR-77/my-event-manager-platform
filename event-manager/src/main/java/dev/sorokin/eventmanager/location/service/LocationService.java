@@ -2,7 +2,7 @@ package dev.sorokin.eventmanager.location.service;
 
 import dev.sorokin.eventmanager.location.converter.LocationMapper;
 import dev.sorokin.eventmanager.location.entity.Location;
-import dev.sorokin.eventmanager.location.exceptions.LocationNameIsAlreadyExist;
+import dev.sorokin.eventmanager.exceptions.LocationNameIsAlreadyExist;
 import dev.sorokin.eventmanager.location.repository.LocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

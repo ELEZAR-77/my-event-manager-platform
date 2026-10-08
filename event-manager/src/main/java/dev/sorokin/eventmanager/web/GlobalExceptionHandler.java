@@ -1,7 +1,6 @@
 package dev.sorokin.eventmanager.web;
 
-import dev.sorokin.eventmanager.location.exceptions.LocationNameIsAlreadyExist;
-import dev.sorokin.eventmanager.user.exceptions.UserLoginAlreadyExistsException;
+import dev.sorokin.eventmanager.exceptions.*;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -214,6 +213,101 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new ServerErrorResponse(
                         "Bad credentials exception!",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(InvalidEventDateException.class)
+    public ResponseEntity<ServerErrorResponse> invalidEventDateExceptionHandler(
+            InvalidEventDateException e
+    ) {
+
+        log.error("Got invalid event date exception {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ServerErrorResponse(
+                        "InvalidEventDateException!",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(EventCapacityOverflowException.class)
+    public ResponseEntity<ServerErrorResponse> eventCapacityOverflowExceptionHandler(
+            EventCapacityOverflowException e
+    ) {
+
+        log.error("Got event capacity overflow exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ServerErrorResponse(
+                        "Event capacity overflow exception!",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(EventIsFullException.class)
+    public ResponseEntity<ServerErrorResponse> eventIsFullExceptionHandler(
+            EventIsFullException e
+    ) {
+
+        log.error("Got event is full exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ServerErrorResponse(
+                        "Event Is Full Exception!",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(EventStatusException.class)
+    public ResponseEntity<ServerErrorResponse> eventStatusExceptionHandler(
+            EventStatusException e
+    ) {
+
+        log.error("Got event status exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ServerErrorResponse(
+                        "Event Status Exception!",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(AlreadyRegisteredException.class)
+    public ResponseEntity<ServerErrorResponse> alreadyRegisteredExceptionHandler(
+            AlreadyRegisteredException e
+    ) {
+
+        log.error("Got already registered exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ServerErrorResponse(
+                        "Event Status Exception!",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+    @ExceptionHandler(EventOwnerRegistrationException.class)
+    public ResponseEntity<ServerErrorResponse> eventOwnerRegistrationExceptionHandler(
+            EventOwnerRegistrationException e
+    ) {
+
+        log.error("Got event owner registration exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ServerErrorResponse(
+                        "Event Owner Registration Exception",
                         e.getMessage(),
                         LocalDateTime.now()
                 ));

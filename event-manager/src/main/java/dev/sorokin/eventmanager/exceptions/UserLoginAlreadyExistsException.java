@@ -1,4 +1,4 @@
-package dev.sorokin.eventmanager.user.exceptions;
+package dev.sorokin.eventmanager.exceptions;
 
 public class UserLoginAlreadyExistsException extends RuntimeException {
     public UserLoginAlreadyExistsException(String message) {

@@ -6,6 +6,8 @@ import dev.sorokin.eventmanager.events.enity.EventEntity;
 import dev.sorokin.eventmanager.events.enums.EventStatus;
 import dev.sorokin.eventmanager.events.mapper.EventMapper;
 import dev.sorokin.eventmanager.events.repository.EventRepository;
+import dev.sorokin.eventmanager.exceptions.EventCapacityOverflowException;
+import dev.sorokin.eventmanager.exceptions.InvalidEventDateException;
 import dev.sorokin.eventmanager.location.entity.LocationEntity;
 import dev.sorokin.eventmanager.location.repository.LocationRepository;
 import dev.sorokin.eventmanager.security.jwt.JwtAuthenticationService;
@@ -16,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -46,6 +49,14 @@ public class EventService {
         UserEntity owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new EntityNotFoundException("User with id: %s not found".formatted(ownerId)));
 
+
+        if (!request.date().isAfter(LocalDateTime.now())) {
+            throw new InvalidEventDateException("Event date must be in the future");
+        }
+        if (request.maxPlaces() > location.getCapacity()) {
+            throw new EventCapacityOverflowException("Event max places cannot be greater then location capacity");
+        }
+
         EventEntity eventEntity = new EventEntity(
                 null,
                 request.name(),
@@ -62,5 +73,12 @@ public class EventService {
         var savedEvent = eventRepository.save(eventEntity);
 
         return eventMapper.entityToDomain(savedEvent);
+    }
+
+    public EventEntity findByIdForUpdate(Long eventId) {
+
+        return eventRepository.findById(eventId).orElseThrow(
+                () -> new EntityNotFoundException("Event with id: %s not found".formatted(eventId))
+        );
     }
 }

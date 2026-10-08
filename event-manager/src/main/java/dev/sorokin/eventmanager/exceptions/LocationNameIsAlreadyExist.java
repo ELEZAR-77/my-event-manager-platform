@@ -1,4 +1,4 @@
-package dev.sorokin.eventmanager.location.exceptions;
+package dev.sorokin.eventmanager.exceptions;
 
 public class LocationNameIsAlreadyExist extends RuntimeException {
     public LocationNameIsAlreadyExist(String message) {

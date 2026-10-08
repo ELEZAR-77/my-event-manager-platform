@@ -1,7 +1,7 @@
 package dev.sorokin.eventmanager.user.serivce;
 
 import dev.sorokin.eventmanager.user.entity.User;
-import dev.sorokin.eventmanager.user.exceptions.UserLoginAlreadyExistsException;
+import dev.sorokin.eventmanager.exceptions.UserLoginAlreadyExistsException;
 import dev.sorokin.eventmanager.user.mapper.UserMapper;
 import dev.sorokin.eventmanager.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
