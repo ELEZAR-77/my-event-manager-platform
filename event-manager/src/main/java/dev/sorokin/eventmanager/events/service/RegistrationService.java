@@ -36,7 +36,7 @@ public class RegistrationService {
         Long userId = authenticationService.getCurrentAuthenticatedUserOrThrow().id();
         var user = userMapper.toEntity(userService.findUserById(userId));
 
-        var event = eventService.findByIdForUpdate(eventId);
+        var event = eventService.findByIdOrThrow(eventId);
 
         if (registrationRepository.existsByEventIdAndUserId(eventId, userId)) {
             log.warn("User {} - already registered", user.getLogin());

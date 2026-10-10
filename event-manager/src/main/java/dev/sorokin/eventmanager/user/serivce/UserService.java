@@ -1,7 +1,9 @@
 package dev.sorokin.eventmanager.user.serivce;
 
+import dev.sorokin.eventmanager.security.jwt.JwtAuthenticationService;
 import dev.sorokin.eventmanager.user.entity.User;
 import dev.sorokin.eventmanager.exceptions.UserLoginAlreadyExistsException;
+import dev.sorokin.eventmanager.user.entity.UserEntity;
 import dev.sorokin.eventmanager.user.mapper.UserMapper;
 import dev.sorokin.eventmanager.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtAuthenticationService authenticationService;
 
 
     @Transactional
@@ -88,5 +91,12 @@ public class UserService {
         } else  {
             throw new EntityNotFoundException("User with id " + id + " not found");
         }
+    }
+
+    public UserEntity getCurrentAuthenticateUserEntity() {
+        Long userId = authenticationService.getCurrentAuthenticatedUserOrThrow().id();
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with id: %s not found".formatted(userId)));
     }
 }

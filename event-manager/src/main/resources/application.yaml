@@ -34,7 +34,7 @@ jwt:
   lifetime: 86400000
 
 my-scheduler:
-  enabled: true,
-  fixed-duration-seconds: 20,
-  initial-delay-seconds: 30,
+  enabled: true
+  fixed-delay-seconds: 20
+  initial-delay-seconds: 30
   fixed-rate-seconds: 60

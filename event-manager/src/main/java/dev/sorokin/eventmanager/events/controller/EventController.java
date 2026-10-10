@@ -41,18 +41,48 @@ public class EventController {
                 );
     }
 
-
+    @PreAuthorize("hasAuthority('USER')")
     @PostMapping("/registrations/{eventId}")
     public ResponseEntity<Void> registrationUserToEvent(
             @PathVariable("eventId") Long eventId
     ) {
-        log.info("Got request registration user to event: eventId{}", eventId);
+        log.info("Got request for registration user to event: eventId{}", eventId);
         registrationService.createRegistration(eventId);
 
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .build();
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN') " +
+            "or @eventService.isOwner(#eventId)")
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> eventCancel(
+            @PathVariable("eventId") Long eventId
+    ) {
+        log.info("Got request for cancel event: event{}", eventId);
+
+        eventService.eventCancel(eventId);
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .build();
+    }
+
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventResponseDto> getEventById(
+            @PathVariable("eventId") Long eventId
+    ) {
+        log.info("Got request for get event by Id: eventId{}", eventId);
+
+        return ResponseEntity
+                .ok(
+                        eventMapper.domainToDto(
+                                eventService.getEventById(eventId)
+                        )
+                );
     }
 }
 

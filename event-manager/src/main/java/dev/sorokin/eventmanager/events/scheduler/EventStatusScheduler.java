@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -17,7 +19,7 @@ public class EventStatusScheduler {
     @Scheduled(
             initialDelayString = "${my-scheduler.initial-delay-seconds}",
             fixedDelayString = "${my-scheduler.fixed-delay-seconds}",
-            fixedRateString = "${my-scheduler.fixed-rate-seconds}"
+            timeUnit = TimeUnit.SECONDS
     )
     public void updateEventStatus() {
         if (schedulerConfiguration.enabled()) {
