@@ -17,8 +17,10 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -81,4 +83,32 @@ public class EventService {
                 () -> new EntityNotFoundException("Event with id: %s not found".formatted(eventId))
         );
     }
+
+    @Transactional
+    public void updateEventStatuses() {
+
+        LocalDateTime now = LocalDateTime.now();
+        List<EventEntity> entities = new ArrayList<>(eventRepository.findAll());
+
+
+        for (EventEntity event : entities) {
+
+            if (event.getEventStatus() == EventStatus.CANCELLED
+                    || event.getEventStatus() == EventStatus.FINISHED) {
+                continue;
+            }
+
+            if (!now.isBefore(event.getStartAt()
+                    .plusMinutes(event.getDurationMinutes()))) {
+
+                event.setEventStatus(EventStatus.FINISHED);
+
+            } else if (!now.isBefore(event.getStartAt())) {
+
+                event.setEventStatus(EventStatus.STARTED);
+            }
+        }
+    }
+
+
 }
