@@ -32,9 +32,3 @@ springdoc:
 jwt:
   secret-key: GMJTuiw5q4V4Y4jHn1TdyixIdPp1UjEXrRNaEqdE0dZ
   lifetime: 86400000
-
-my-scheduler:
-  enabled: true
-  fixed-delay-seconds: 20
-  initial-delay-seconds: 30
-  fixed-rate-seconds: 60
