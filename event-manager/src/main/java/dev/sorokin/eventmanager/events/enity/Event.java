@@ -19,6 +19,8 @@ public record Event(
 
         Integer occupiedPlaces,
 
+        Integer cost,
+
         String eventStatus,
 
         Long locationId,

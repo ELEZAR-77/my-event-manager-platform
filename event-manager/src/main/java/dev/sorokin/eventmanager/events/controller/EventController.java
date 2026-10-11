@@ -2,6 +2,7 @@ package dev.sorokin.eventmanager.events.controller;
 
 import dev.sorokin.eventmanager.events.dto.EventCreateRequestDto;
 import dev.sorokin.eventmanager.events.dto.EventResponseDto;
+import dev.sorokin.eventmanager.events.dto.EventUpdateRequestDto;
 import dev.sorokin.eventmanager.events.mapper.EventMapper;
 import dev.sorokin.eventmanager.events.service.EventService;
 import dev.sorokin.eventmanager.events.service.RegistrationService;
@@ -83,6 +84,22 @@ public class EventController {
                                 eventService.getEventById(eventId)
                         )
                 );
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN') " +
+            "or @eventService.isOwner(#eventId)")
+    @PutMapping("/{eventId}")
+    public ResponseEntity<EventResponseDto> updateEvent(
+            @PathVariable("eventId") Long eventId,
+            @Valid @RequestBody EventUpdateRequestDto updateRequestDto
+    ) {
+        log.info("Got request for update event by Id: eventId{}", eventId);
+
+        return ResponseEntity.ok(
+                eventMapper.domainToDto(
+                        eventService.updateEvent(eventId, updateRequestDto)
+                )
+        );
     }
 }
 

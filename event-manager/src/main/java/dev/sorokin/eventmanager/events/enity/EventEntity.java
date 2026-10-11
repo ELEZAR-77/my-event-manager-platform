@@ -39,6 +39,9 @@ public class EventEntity {
     @Column(name = "occupied_places", nullable = false)
     private Integer occupiedPlaces;
 
+    @Column(name = "cost")
+    private Integer cost;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false)
     private EventStatus eventStatus;

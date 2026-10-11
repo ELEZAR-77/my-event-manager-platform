@@ -1,32 +1,29 @@
 package dev.sorokin.eventmanager.events.service;
 
 import dev.sorokin.eventmanager.events.dto.EventCreateRequestDto;
+import dev.sorokin.eventmanager.events.dto.EventUpdateRequestDto;
 import dev.sorokin.eventmanager.events.enity.Event;
 import dev.sorokin.eventmanager.events.enity.EventEntity;
-import dev.sorokin.eventmanager.events.enity.RegistrationEntity;
 import dev.sorokin.eventmanager.events.enums.EventStatus;
 import dev.sorokin.eventmanager.events.mapper.EventMapper;
 import dev.sorokin.eventmanager.events.repository.EventRepository;
-import dev.sorokin.eventmanager.events.repository.RegistrationRepository;
 import dev.sorokin.eventmanager.exceptions.EventCapacityOverflowException;
 import dev.sorokin.eventmanager.exceptions.EventStatusException;
-import dev.sorokin.eventmanager.exceptions.InvalidEventDateException;
-import dev.sorokin.eventmanager.exceptions.UserIsNotEventsOwnerException;
+import dev.sorokin.eventmanager.exceptions.InvalidEventDataException;
 import dev.sorokin.eventmanager.location.entity.LocationEntity;
 import dev.sorokin.eventmanager.location.repository.LocationRepository;
-import dev.sorokin.eventmanager.security.jwt.JwtAuthenticationService;
 import dev.sorokin.eventmanager.user.entity.UserEntity;
-import dev.sorokin.eventmanager.user.repository.UserRepository;
 import dev.sorokin.eventmanager.user.serivce.UserService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -56,7 +53,7 @@ public class EventService {
         UserEntity owner = userService.getCurrentAuthenticateUserEntity();
 
         if (!request.date().isAfter(LocalDateTime.now())) {
-            throw new InvalidEventDateException("Event date must be in the future");
+            throw new InvalidEventDataException("Event date must be in the future");
         }
         if (request.maxPlaces() > location.getCapacity()) {
             throw new EventCapacityOverflowException("Event max places cannot be greater then location capacity");
@@ -69,6 +66,7 @@ public class EventService {
                 request.duration(),
                 request.maxPlaces(),
                 0,
+                request.cost(),
                 EventStatus.WAIT_START,
                 location,
                 owner,
@@ -80,32 +78,35 @@ public class EventService {
         return eventMapper.entityToDomain(savedEvent);
     }
 
+    // Каждая пачка обрабатывается в своей транзакции
+    // Возможно временный вариант по обновлению статусов(хочу оптимизировать запрос с помощью индексов в бд, хоть это и избыточно)
     @Transactional
-    public void updateEventStatuses() {
+    public boolean processNextBatch(int page, int pageSize) {
 
+        Pageable pageable = PageRequest.of(page, pageSize);
         LocalDateTime now = LocalDateTime.now();
-        List<EventEntity> entities = new ArrayList<>(eventRepository.findAll());
+        List<EventEntity> events = eventRepository.findExpiredEvents(now, pageable);
 
+        if (events.isEmpty()) {
+            return false;
+        }
 
-        for (EventEntity event : entities) {
-
-            if (event.getEventStatus() == EventStatus.CANCELLED
-                    || event.getEventStatus() == EventStatus.FINISHED) {
-                continue;
-            }
+        for (EventEntity event : events) {
 
             if (!now.isBefore(event.getStartAt()
                     .plusMinutes(event.getDurationMinutes()))) {
-
+                
                 event.setEventStatus(EventStatus.FINISHED);
-
             } else if (!now.isBefore(event.getStartAt())) {
 
                 event.setEventStatus(EventStatus.STARTED);
             }
         }
-    }
 
+        eventRepository.saveAll(events);
+
+        return true;
+    }
 
     @Transactional
     public void eventCancel(Long eventId) {
@@ -136,6 +137,49 @@ public class EventService {
         var event = findByIdOrThrow(eventId);
 
         return eventMapper.entityToDomain(event);
+    }
+
+    @Transactional
+    public Event updateEvent(
+            Long eventId,
+            EventUpdateRequestDto updateRequestDto
+    ) {
+
+        var eventToUpdate = eventRepository.findByIdForUpdate(eventId).orElseThrow(
+                () -> new EntityNotFoundException("Event with id: %s not found".formatted(eventId))
+        );
+
+        var location = locationRepository.findById(updateRequestDto.locationId()).orElseThrow(
+                () -> new EntityNotFoundException("Location with id %s not found".formatted(updateRequestDto.locationId()))
+        );
+
+        if (eventToUpdate.getEventStatus() != EventStatus.WAIT_START) {
+            throw new EventStatusException(
+                    "Only upcoming events can be updated"
+            );
+        }
+
+        if (updateRequestDto.maxPlaces() < eventToUpdate.getOccupiedPlaces()) {
+            throw new InvalidEventDataException(
+                    "Max places cannot be less than occupied places"
+            );
+        }
+
+        if (!updateRequestDto.date().isAfter(LocalDateTime.now())) {
+            throw new InvalidEventDataException(
+                    "Event date must be in the future"
+            );
+        }
+
+        eventToUpdate.setName(updateRequestDto.name());
+        eventToUpdate.setMaxPlaces(updateRequestDto.maxPlaces());
+        eventToUpdate.setStartAt(updateRequestDto.date());
+        eventToUpdate.setCost(updateRequestDto.cost());
+        eventToUpdate.setDurationMinutes(updateRequestDto.duration());
+        eventToUpdate.setLocation(location);
+
+        return eventMapper.entityToDomain(eventToUpdate);
+
     }
 
     public EventEntity findByIdOrThrow(Long eventId) {

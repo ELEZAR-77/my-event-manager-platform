@@ -18,6 +18,8 @@ public record EventResponseDto(
 
         Integer occupiedPlaces,
 
+        Integer cost,
+
         String eventStatus,
 
         Long locationId,

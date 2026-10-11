@@ -24,8 +24,14 @@ public class EventStatusScheduler {
     public void updateEventStatus() {
         if (schedulerConfiguration.enabled()) {
             log.info("Start events statuses check");
+            int page = 0;
+            int pageSize = 10;
+            boolean hasMore = true;
 
-            eventService.updateEventStatuses();
+            while (hasMore) {
+                hasMore = eventService.processNextBatch(page, pageSize);
+                page++;
+            }
 
             log.info("End of event status check");
 

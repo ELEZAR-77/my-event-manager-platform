@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/changesets/0006-add-table-events.yaml
   - include:
       file: db/changelog/changesets/0007-add-table-registrations.yaml
+  - include:
+      file: db/changelog/changesets/0008-add-column-cost-to-events.yaml

@@ -218,9 +218,9 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(InvalidEventDateException.class)
+    @ExceptionHandler(InvalidEventDataException.class)
     public ResponseEntity<ServerErrorResponse> invalidEventDateExceptionHandler(
-            InvalidEventDateException e
+            InvalidEventDataException e
     ) {
 
         log.error("Got invalid event date exception {}", e.getMessage());

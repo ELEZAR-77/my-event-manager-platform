@@ -19,6 +19,7 @@ public class EventMapper {
                 event.durationMinutes(),
                 event.maxPlaces(),
                 event.occupiedPlaces(),
+                event.cost(),
                 event.eventStatus(),
                 event.locationId(),
                 event.ownerId()
@@ -35,6 +36,7 @@ public class EventMapper {
                 eventEntity.getDurationMinutes(),
                 eventEntity.getMaxPlaces(),
                 eventEntity.getOccupiedPlaces(),
+                eventEntity.getCost(),
                 eventEntity.getEventStatus().name(),
                 eventEntity.getLocation().getId(),
                 eventEntity.getOwner().getId()
@@ -51,6 +53,7 @@ public class EventMapper {
                 event.durationMinutes(),
                 event.maxPlaces(),
                 event.occupiedPlaces(),
+                event.cost(),
                 event.eventStatus(),
                 event.locationId(),
                 event.ownerId()
