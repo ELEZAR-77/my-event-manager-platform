@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -22,21 +23,35 @@ public class EventStatusScheduler {
             timeUnit = TimeUnit.SECONDS
     )
     public void updateEventStatus() {
-        if (schedulerConfiguration.enabled()) {
-            log.info("Start events statuses check");
-            int page = 0;
-            int pageSize = 10;
-            boolean hasMore = true;
+        if (!schedulerConfiguration.enabled()) {
+            log.warn("Scheduler disabled. Do nothing");
+            return;
+        }
 
-            while (hasMore) {
-                hasMore = eventService.processNextBatch(page, pageSize);
-                page++;
+        log.info("Start events statuses check");
+
+        LocalDateTime now = LocalDateTime.now();
+        int pageSize = 10;
+
+        boolean hasMoreStarts = true;
+        while (hasMoreStarts) {
+            hasMoreStarts = eventService.startExpiredEvents(now, pageSize);
+        }
+
+        int page = 0;
+        while (true) {
+
+            int fetchedCount = eventService.finishExpiredEvents(now, pageSize, page);
+
+            if (fetchedCount == 0) {
+                break;
+            }
+            if (fetchedCount < pageSize) {
+                break;
             }
 
-            log.info("End of event status check");
-
-        } else {
-            log.warn("Scheduler disabled. Do nothing");
+            page++;
         }
+        log.info("End of event status check");
     }
 }

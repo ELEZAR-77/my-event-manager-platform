@@ -26,9 +26,16 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-        SELECT e from EventEntity e
-            WHERE e.eventStatus IN ('WAIT_START', 'STARTED')
-                    AND e.startAt <= :now
-   """)
-    List<EventEntity> findExpiredEvents(LocalDateTime now, Pageable pageable);
+    SELECT e from EventEntity e 
+        WHERE e.eventStatus = 'WAIT_START' AND e.startAt <= :now
+    """)
+    List<EventEntity> findEventsToStart(LocalDateTime now, Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    SELECT e from EventEntity e 
+        WHERE e.eventStatus = 'STARTED'
+    """)
+    List<EventEntity> findStartedEvents(LocalDateTime now, Pageable pageable);
+
 }

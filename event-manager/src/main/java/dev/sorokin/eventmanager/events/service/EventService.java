@@ -19,7 +19,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,34 +77,43 @@ public class EventService {
         return eventMapper.entityToDomain(savedEvent);
     }
 
-    // Каждая пачка обрабатывается в своей транзакции
-    // Возможно временный вариант по обновлению статусов(хочу оптимизировать запрос с помощью индексов в бд, хоть это и избыточно)
     @Transactional
-    public boolean processNextBatch(int page, int pageSize) {
-
-        Pageable pageable = PageRequest.of(page, pageSize);
-        LocalDateTime now = LocalDateTime.now();
-        List<EventEntity> events = eventRepository.findExpiredEvents(now, pageable);
+    public boolean startExpiredEvents(LocalDateTime now, int pageSize) {
+        // Теперь тут будет только 0-я страница, железно
+        List<EventEntity> events = eventRepository.findEventsToStart(now, PageRequest.of(0, pageSize));
 
         if (events.isEmpty()) {
             return false;
         }
 
         for (EventEntity event : events) {
+            event.setEventStatus(EventStatus.STARTED);
+        }
 
+        eventRepository.saveAll(events);
+        return true;
+    }
+
+    @Transactional
+    public int finishExpiredEvents(LocalDateTime now, int pageSize, int page) {
+
+        List<EventEntity> events = eventRepository.findStartedEvents(now, PageRequest.of(page, pageSize));
+
+
+        if (events.isEmpty()) {
+            return 0;
+        }
+
+        for (EventEntity event : events) {
             if (!now.isBefore(event.getStartAt()
-                    .plusMinutes(event.getDurationMinutes()))) {
-                
+                    .plusMinutes(event.getDurationMinutes()))
+            ) {
                 event.setEventStatus(EventStatus.FINISHED);
-            } else if (!now.isBefore(event.getStartAt())) {
-
-                event.setEventStatus(EventStatus.STARTED);
             }
         }
 
         eventRepository.saveAll(events);
-
-        return true;
+        return events.size();
     }
 
     @Transactional
