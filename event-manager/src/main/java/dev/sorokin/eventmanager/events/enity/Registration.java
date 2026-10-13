@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 public record Registration(
         Long id,
 
-        Event event,
+        Long eventId,
 
-        User user,
+        Long userid,
 
         LocalDateTime createdAt
 ) {

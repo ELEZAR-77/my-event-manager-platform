@@ -4,6 +4,8 @@ import dev.sorokin.eventmanager.exceptions.*;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.errors.InvalidRegistrationException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -308,6 +310,38 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(new ServerErrorResponse(
                         "Event Owner Registration Exception",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
+    public ResponseEntity<ServerErrorResponse> invalidDataAccessResourceUsageExceptionHandler(
+            InvalidDataAccessResourceUsageException e
+    ) {
+
+        log.error("Got Invalid Data Access Resource Usage Exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ServerErrorResponse(
+                        "Invalid Data Access Resource Usage Exception",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(InvalidRegistrationException.class)
+    public ResponseEntity<ServerErrorResponse> invalidRegistrationExceptionHandler(
+            InvalidRegistrationException e
+    ) {
+
+        log.error("Got Invalid Registration Exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ServerErrorResponse(
+                        "Invalid Registration Exception",
                         e.getMessage(),
                         LocalDateTime.now()
                 ));

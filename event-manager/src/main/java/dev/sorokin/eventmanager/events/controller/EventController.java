@@ -1,6 +1,7 @@
 package dev.sorokin.eventmanager.events.controller;
 
 import dev.sorokin.eventmanager.events.dto.EventCreateRequestDto;
+import dev.sorokin.eventmanager.events.dto.EventFilterRequestDto;
 import dev.sorokin.eventmanager.events.dto.EventResponseDto;
 import dev.sorokin.eventmanager.events.dto.EventUpdateRequestDto;
 import dev.sorokin.eventmanager.events.mapper.EventMapper;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -100,6 +103,63 @@ public class EventController {
                         eventService.updateEvent(eventId, updateRequestDto)
                 )
         );
+    }
+
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @PostMapping("/search")
+    public ResponseEntity<List<EventResponseDto>> searchEvents(
+            @RequestBody EventFilterRequestDto filterRequestDto
+    ) {
+        log.info("Got request for search events by filter");
+
+        return ResponseEntity.ok(
+                eventService.searchEvents(filterRequestDto)
+                        .stream()
+                        .map(eventMapper::domainToDto)
+                        .toList()
+        );
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @DeleteMapping("/registrations/cancel/{eventId}")
+    public ResponseEntity<Void> cancelRegistration(
+            @PathVariable("eventId") Long eventId
+    ) {
+        log.info("Got request for cancel registration: event{}", eventId);
+
+        registrationService.cancelRegistration(eventId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .build();
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @GetMapping("/my")
+    public ResponseEntity<List<EventResponseDto>> currentOwnersEvents() {
+        log.info("Got request to retrieve all events for the current owner");
+
+        return ResponseEntity
+                .ok(
+                        eventService.getOwnerEvents()
+                                .stream()
+                                .map(eventMapper::domainToDto)
+                                .toList()
+                );
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @GetMapping("/registrations/my")
+    public ResponseEntity<List<EventResponseDto>> currentUserRegistrationEvents() {
+        log.info("Got request to retrieve all events for which the current user is registered");
+
+        return ResponseEntity
+                .ok(
+                        registrationService.getUserRegistrations()
+                                .stream()
+                                .map(eventMapper::domainToDto)
+                                .toList()
+                );
     }
 }
 

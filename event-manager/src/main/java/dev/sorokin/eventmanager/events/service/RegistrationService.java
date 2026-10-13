@@ -1,40 +1,44 @@
 package dev.sorokin.eventmanager.events.service;
 
+import dev.sorokin.eventmanager.events.enity.Event;
+import dev.sorokin.eventmanager.events.enity.EventEntity;
 import dev.sorokin.eventmanager.events.enity.RegistrationEntity;
 import dev.sorokin.eventmanager.events.enums.EventStatus;
-import dev.sorokin.eventmanager.events.repository.EventRepository;
+import dev.sorokin.eventmanager.events.mapper.EventMapper;
 import dev.sorokin.eventmanager.events.repository.RegistrationRepository;
 import dev.sorokin.eventmanager.exceptions.AlreadyRegisteredException;
 import dev.sorokin.eventmanager.exceptions.EventIsFullException;
 import dev.sorokin.eventmanager.exceptions.EventOwnerRegistrationException;
 import dev.sorokin.eventmanager.exceptions.EventStatusException;
-import dev.sorokin.eventmanager.security.jwt.JwtAuthenticationService;
-import dev.sorokin.eventmanager.user.mapper.UserMapper;
 import dev.sorokin.eventmanager.user.serivce.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.errors.InvalidRegistrationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class RegistrationService {
 
-    private final JwtAuthenticationService authenticationService;
     private final EventService eventService;
     private final RegistrationRepository registrationRepository;
-    private final UserMapper userMapper;
     private final UserService userService;
+    private final EventMapper eventMapper;
 
 
     @Transactional
     public void createRegistration(Long eventId) {
 
-        Long userId = authenticationService.getCurrentAuthenticatedUserOrThrow().id();
-        var user = userMapper.toEntity(userService.findUserById(userId));
+        var user = userService.getCurrentAuthenticateUserEntity();
+        Long userId = user.getId();
 
         var event = eventService.findByIdOrThrow(eventId);
 
@@ -80,6 +84,45 @@ public class RegistrationService {
     }
 
 
+    @Transactional
+    public void cancelRegistration(Long eventId) {
 
+        var user = userService.getCurrentAuthenticateUserEntity();
 
+        var event = eventService.findByIdForUpdateWithLock(eventId);
+
+        var registration = registrationRepository.findByEventId(eventId).orElseThrow(
+                () -> new EntityNotFoundException("Registration not found!")
+        );
+
+        if (!Objects.equals(user.getId(), registration.getUser().getId())) {
+            throw new InvalidRegistrationException("You can only modify or access your own registrations.");
+        }
+
+        if (event.getEventStatus() != EventStatus.WAIT_START) {
+            throw new EventStatusException("Event must be in WAIT_START status");
+        }
+
+        event.setOccupiedPlaces(event.getOccupiedPlaces() - 1);
+        registrationRepository.deleteById(registration.getId());
+    }
+
+    public List<Event> getUserRegistrations() {
+
+        List<EventEntity> events = new LinkedList<>();
+        Long userId = userService.getCurrentAuthenticateUserEntity().getId();
+        var registrations = registrationRepository.findAllByUserId(userId);
+
+        if (registrations.isEmpty()) {
+            throw new EntityNotFoundException("Registrations not found");
+        }
+
+        for (RegistrationEntity registration : registrations) {
+            events.add(eventService.findByIdOrThrow(registration.getEvent().getId()));
+        }
+
+        return events.stream()
+                .map(eventMapper::entityToDomain)
+                .toList();
+    }
 }

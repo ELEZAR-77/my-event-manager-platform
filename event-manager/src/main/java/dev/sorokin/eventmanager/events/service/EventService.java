@@ -1,6 +1,7 @@
 package dev.sorokin.eventmanager.events.service;
 
 import dev.sorokin.eventmanager.events.dto.EventCreateRequestDto;
+import dev.sorokin.eventmanager.events.dto.EventFilterRequestDto;
 import dev.sorokin.eventmanager.events.dto.EventUpdateRequestDto;
 import dev.sorokin.eventmanager.events.enity.Event;
 import dev.sorokin.eventmanager.events.enity.EventEntity;
@@ -161,6 +162,10 @@ public class EventService {
                 () -> new EntityNotFoundException("Location with id %s not found".formatted(updateRequestDto.locationId()))
         );
 
+        if (updateRequestDto.maxPlaces() > location.getCapacity()) {
+            throw new EventCapacityOverflowException("Event max places cannot be greater then location capacity");
+        }
+
         if (eventToUpdate.getEventStatus() != EventStatus.WAIT_START) {
             throw new EventStatusException(
                     "Only upcoming events can be updated"
@@ -190,6 +195,29 @@ public class EventService {
 
     }
 
+    public List<Event> searchEvents(EventFilterRequestDto filterRequestDto) {
+
+        validateRange(filterRequestDto.placesMin(), filterRequestDto.placesMax(), "places");
+        validateRange(filterRequestDto.costMin(), filterRequestDto.costMax(), "cost");
+        validateRange(filterRequestDto.durationMin(), filterRequestDto.durationMax(), "duration");
+
+        return eventRepository.findByFiler(
+                filterRequestDto.name(),
+                filterRequestDto.placesMin(),
+                filterRequestDto.placesMax(),
+                filterRequestDto.dateStartAfter(),
+                filterRequestDto.dateStartBefore(),
+                filterRequestDto.costMin(),
+                filterRequestDto.costMax(),
+                filterRequestDto.durationMin(),
+                filterRequestDto.durationMax(),
+                filterRequestDto.locationId(),
+                filterRequestDto.eventStatus())
+                    .stream()
+                    .map(eventMapper::entityToDomain)
+                    .toList();
+    }
+
     public EventEntity findByIdOrThrow(Long eventId) {
 
         return eventRepository.findById(eventId).orElseThrow(
@@ -203,5 +231,34 @@ public class EventService {
         var event = findByIdOrThrow(eventId);
 
         return event.getOwner().getId().equals(currentUserId);
+    }
+
+    private void validateRange(Integer min, Integer max, String field) {
+        if (min != null && max != null && min > max) {
+            throw new InvalidEventDataException(
+                    field + " minimum cannot exceed maximum"
+            );
+        }
+    }
+
+    public EventEntity findByIdForUpdateWithLock(Long eventId) {
+        return eventRepository.findByIdForUpdate(eventId).orElseThrow(
+                () -> new EntityNotFoundException("Event with id: %s not found".formatted(eventId))
+        );
+    }
+
+    public List<Event> getOwnerEvents() {
+
+        Long ownerId = userService.getCurrentAuthenticateUserEntity().getId();
+        var events = eventRepository.findCurrentUserEvents(ownerId)
+                .stream()
+                .map(eventMapper::entityToDomain)
+                .toList();
+
+        if (events.isEmpty()) {
+            throw new EntityNotFoundException("Events not found");
+        }
+
+        return events;
     }
 }
