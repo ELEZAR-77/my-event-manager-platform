@@ -19,7 +19,7 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
-    boolean existsByName(String name);
+    boolean existsByName(@Param("name") String name);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -77,4 +77,13 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
                 WHERE (e.owner.id = :ownerId)
         """)
     List<EventEntity> findCurrentUserEvents(@Param("ownerId") Long ownerId);
+
+    @Query("""
+        SELECT e from EventEntity e
+                WHERE e.location.id = :locationId
+                        AND e.eventStatus = 'WAIT_START'
+        """)
+    List<EventEntity> findAllByLocationId(@Param("locationId") Long locationId);
+
+    boolean existsByLocation_Id(Long id);
 }

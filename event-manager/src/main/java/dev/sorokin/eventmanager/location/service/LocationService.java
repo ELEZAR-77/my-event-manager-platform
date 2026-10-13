@@ -1,11 +1,18 @@
 package dev.sorokin.eventmanager.location.service;
 
+import dev.sorokin.eventmanager.events.enity.EventEntity;
+import dev.sorokin.eventmanager.events.repository.EventRepository;
+import dev.sorokin.eventmanager.events.service.EventService;
+import dev.sorokin.eventmanager.exceptions.EventCapacityOverflowException;
+import dev.sorokin.eventmanager.exceptions.LocationHasEventsException;
 import dev.sorokin.eventmanager.location.converter.LocationMapper;
 import dev.sorokin.eventmanager.location.entity.Location;
 import dev.sorokin.eventmanager.exceptions.LocationNameIsAlreadyExist;
+import dev.sorokin.eventmanager.location.entity.LocationEntity;
 import dev.sorokin.eventmanager.location.repository.LocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LocationService {
 
+    private final EventRepository eventRepository;
     private final LocationRepository locationRepository;
     private final LocationMapper locationMapper;
 
@@ -46,7 +54,7 @@ public class LocationService {
     @Transactional
     public Location updateLocation(Long id, Location location) {
 
-        var entity = locationRepository.findById(id).orElseThrow(
+        var entity = locationRepository.findByIdForModify(id).orElseThrow(
                 () -> new EntityNotFoundException("Entity with id %s not found".formatted(id))
         );
 
@@ -59,6 +67,14 @@ public class LocationService {
         }
 
         if (location.capacity() != null) {
+            var locationEvents = eventRepository.findAllByLocationId(id);
+            for (EventEntity event : locationEvents) {
+                if (event.getMaxPlaces() > location.capacity()) {
+                    throw new EventCapacityOverflowException(
+                            "Location capacity cannot be less then event max places"
+                    );
+                }
+            }
             entity.setCapacity(location.capacity());
         }
 
@@ -81,10 +97,17 @@ public class LocationService {
 
     public void deleteLocationById(Long id) {
 
-        if (!locationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Entity with id %s not found".formatted(id));
+        LocationEntity location = locationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Location with id: " + id + " not found"
+                ));
+
+        if (eventRepository.existsByLocation_Id(id)) {
+            throw new LocationHasEventsException(
+                    "Cannot delete location while events are linked to it"
+            );
         }
 
-        locationRepository.deleteById(id);
+        locationRepository.delete(location);
     }
 }

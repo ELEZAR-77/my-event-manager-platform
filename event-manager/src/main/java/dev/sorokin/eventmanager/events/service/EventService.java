@@ -10,6 +10,7 @@ import dev.sorokin.eventmanager.events.mapper.EventMapper;
 import dev.sorokin.eventmanager.events.repository.EventRepository;
 import dev.sorokin.eventmanager.exceptions.EventCapacityOverflowException;
 import dev.sorokin.eventmanager.exceptions.EventStatusException;
+import dev.sorokin.eventmanager.exceptions.EventsDateConflictException;
 import dev.sorokin.eventmanager.exceptions.InvalidEventDataException;
 import dev.sorokin.eventmanager.location.entity.LocationEntity;
 import dev.sorokin.eventmanager.location.repository.LocationRepository;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -51,6 +53,17 @@ public class EventService {
         );
 
         UserEntity owner = userService.getCurrentAuthenticateUserEntity();
+
+        var events = getEventsByLocationId(location.getId());
+        if (!events.isEmpty()) {
+            events.forEach(
+                    event -> {
+                        if (event.getStartAt().equals(request.date())) {
+                            throw new EventsDateConflictException("Location is already occupied at this time");
+                        }
+                    }
+            );
+        }
 
         if (!request.date().isAfter(LocalDateTime.now())) {
             throw new InvalidEventDataException("Event date must be in the future");
@@ -260,5 +273,9 @@ public class EventService {
         }
 
         return events;
+    }
+
+    private List<EventEntity> getEventsByLocationId(Long locationId) {
+        return eventRepository.findAllByLocationId(locationId);
     }
 }

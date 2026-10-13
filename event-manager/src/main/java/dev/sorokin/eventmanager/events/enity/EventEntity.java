@@ -55,6 +55,10 @@ public class EventEntity {
     private UserEntity owner;
 
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(
+            mappedBy = "event",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private List<RegistrationEntity> registrations;
 }

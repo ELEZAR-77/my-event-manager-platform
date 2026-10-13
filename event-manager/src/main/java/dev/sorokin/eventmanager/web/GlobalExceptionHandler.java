@@ -346,4 +346,36 @@ public class GlobalExceptionHandler {
                         LocalDateTime.now()
                 ));
     }
+
+    @ExceptionHandler(LocationHasEventsException.class)
+    public ResponseEntity<ServerErrorResponse> locationHasEventsExceptionHandler(
+            LocationHasEventsException e
+    ) {
+
+        log.error("Got Location Has Events Exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ServerErrorResponse(
+                        "Location Has Events Exception",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
+
+    @ExceptionHandler(EventsDateConflictException.class)
+    public ResponseEntity<ServerErrorResponse> eventsDateConflictExceptionHandler(
+            EventsDateConflictException e
+    ) {
+
+        log.error("Got Events Date Conflict Exception! {}", e.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ServerErrorResponse(
+                        "Events Date Conflict Exception",
+                        e.getMessage(),
+                        LocalDateTime.now()
+                ));
+    }
 }
