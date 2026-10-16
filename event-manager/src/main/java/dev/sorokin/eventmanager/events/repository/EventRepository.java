@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,4 +87,13 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     List<EventEntity> findAllByLocationId(@Param("locationId") Long locationId);
 
     boolean existsByLocation_Id(Long id);
+
+    @Query("""
+        SELECT e from EventEntity e
+            left join fetch e.location
+                    left join fetch e.owner
+                            where e.id IN :ids
+        
+        """)
+    List<EventEntity> findAllByIdInWithDetails(@Param("ids") Collection<Long> ids);
 }

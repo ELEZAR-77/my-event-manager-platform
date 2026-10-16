@@ -52,17 +52,13 @@ public class UserMapper {
     }
 
     public User updateRequestToDomain(UserUpdateRequest  updateRequest) {
-        UserRole role;
-
 
         return new User(
                 null,
                 updateRequest.login(),
                 updateRequest.age(),
                 updateRequest.password(),
-                role = updateRequest.role() == null ?
-                        UserRole.USER
-                        : UserRole.valueOf(updateRequest.role())
+                null
         );
     }
 }

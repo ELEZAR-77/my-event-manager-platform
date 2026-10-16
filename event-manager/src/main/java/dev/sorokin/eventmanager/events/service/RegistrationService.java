@@ -109,19 +109,17 @@ public class RegistrationService {
 
     public List<Event> getUserRegistrations() {
 
-        List<EventEntity> events = new LinkedList<>();
         Long userId = userService.getCurrentAuthenticateUserEntity().getId();
-        var registrations = registrationRepository.findAllByUserId(userId);
 
-        if (registrations.isEmpty()) {
+        // Сначала получаю id всех мероприятий куда пользователь зарегистрировался
+        List<Long> eventIds = registrationRepository.findEventIdsByUserId(userId);
+
+        if (eventIds.isEmpty()) {
             throw new EntityNotFoundException("Registrations not found");
         }
 
-        for (RegistrationEntity registration : registrations) {
-            events.add(eventService.findByIdOrThrow(registration.getEvent().getId()));
-        }
-
-        return events.stream()
+        // Дальше через join fetch тяну все нужные для Events сущности в одном запросе с локациями и владельцами
+        return eventService.getEventsByIdIn(eventIds).stream()
                 .map(eventMapper::entityToDomain)
                 .toList();
     }

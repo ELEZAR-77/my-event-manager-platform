@@ -173,8 +173,7 @@ public class UserControllerTest extends AbstractTest {
         UserUpdateRequest request = new UserUpdateRequest(
                 "new-login",
                 null,
-                "new-password",
-                "ADMIN"
+                "new-password"
         );
 
         String strRequest = objectMapper.writeValueAsString(request);

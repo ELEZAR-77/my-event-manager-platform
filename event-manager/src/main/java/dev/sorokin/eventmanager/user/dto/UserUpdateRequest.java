@@ -12,8 +12,6 @@ public record UserUpdateRequest(
         Integer age,
 
         @Size(min = 4, max = 20, message = "field password can`t be less then 4 or more then 20 characters")
-        String password,
-
-        String role
+        String password
 ) {
 }

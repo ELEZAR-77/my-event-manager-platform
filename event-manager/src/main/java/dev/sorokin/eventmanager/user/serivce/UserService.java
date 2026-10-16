@@ -69,8 +69,6 @@ public class UserService {
             userEntity.setAge(user.age());
         }
 
-        userEntity.setRole(user.role());
-
         userRepository.save(userEntity);
 
         return userMapper.toDomainFromEntity(userEntity);

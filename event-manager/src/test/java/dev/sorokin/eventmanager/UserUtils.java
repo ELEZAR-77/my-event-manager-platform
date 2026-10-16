@@ -21,15 +21,9 @@ public class UserUtils {
     private static boolean isInitialize = false;
 
     public String getJwtTokenWithRole(UserRole role) {
-        if (!isInitialize
-            || userRepository.existsByLogin(DEFAULT_USER_LOGIN)
-            || userRepository.existsByLogin(DEFAULT_ADMIN_LOGIN)) {
-
+        if (!isInitialize) {
             initializeTestUsers();
-
-            isInitialize = userRepository.existsByLogin(DEFAULT_USER_LOGIN)
-                    && userRepository.existsByLogin(DEFAULT_ADMIN_LOGIN);
-
+            isInitialize = true;
         }
 
         return switch (role) {

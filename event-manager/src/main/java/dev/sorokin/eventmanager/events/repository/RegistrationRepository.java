@@ -19,8 +19,9 @@ public interface RegistrationRepository extends JpaRepository<RegistrationEntity
 
 
     @Query("""
-        SELECT r from RegistrationEntity r
-                WHERE r.user.id = :userId
+        SELECT r.event.id
+                from RegistrationEntity r
+                        where r.user.id = :userId
         """)
-    List<RegistrationEntity> findAllByUserId(@Param("userId") Long userId);
+    List<Long> findEventIdsByUserId(@Param("userId") Long userId);
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 @Slf4j
@@ -277,5 +278,9 @@ public class EventService {
 
     private List<EventEntity> getEventsByLocationId(Long locationId) {
         return eventRepository.findAllByLocationId(locationId);
+    }
+
+    public List<EventEntity> getEventsByIdIn(Collection<Long> ids) {
+        return eventRepository.findAllByIdInWithDetails(ids);
     }
 }
