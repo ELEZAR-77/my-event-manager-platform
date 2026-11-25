@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0003-add-column-description-to-locations
+      author: OMAR
+      changes:
+        - addColumn:
+            tableName: locations
+            columns:
+              - column:
+                  name: description
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false

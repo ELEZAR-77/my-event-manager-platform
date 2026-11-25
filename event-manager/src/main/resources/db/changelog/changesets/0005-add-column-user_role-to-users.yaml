@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0005-add-column-user_role-to-users
+      author: OMAR
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: user_role
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
