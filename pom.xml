@@ -10,5 +10,7 @@
 
     <modules>
         <module>event-manager</module>
+        <module>event-common</module>
+        <module>event-notificator</module>
     </modules>
 </project>

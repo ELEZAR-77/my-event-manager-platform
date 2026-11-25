@@ -136,6 +136,12 @@
             <version>3.26.3</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>dev.sorokin</groupId>
+            <artifactId>event-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
